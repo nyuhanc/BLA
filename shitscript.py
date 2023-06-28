@@ -57,3 +57,54 @@ plt.xlabel('Time [sec]')
 plt.grid()
 plt.legend()
 plt.show()
+
+#--------------------------------------------------
+# defining the lags
+y_order = 1
+u_order = 1
+
+# adding lags to the dataset
+for i in range(1, y_order+1):
+    df2['y_lag'+str(i)] = df2['y'].shift(i)
+for i in range(1, u_order+1):
+    df2['u_lag'+str(i)] = df2['u'].shift(i)
+
+# dropping NA values (created due to shifting)
+df2 = df2.dropna()
+
+# setting up the IV2SLS model
+exog_vars = ['u_lag'+str(i) for i in range(1, u_order+1)]
+endog_vars = ['y_lag'+str(i) for i in range(1, y_order+1)]
+instrument_vars = 'u' + exog_vars
+
+# create a DataFrame for the variables you want to check
+df_vars = df2[instrument_vars]
+
+print(df_vars)
+
+# For each X, calculate VIF and save in dataframe
+vif = pd.DataFrame()
+vif["VIF Factor"] = [variance_inflation_factor(df_vars.values, i) for i in range(df_vars.shape[1])]
+vif["features"] = df_vars.columns
+
+print(vif)
+
+print('\n',df2[instrument_vars])
+
+model = IV2SLS(dependent=df2['y'],
+               exog=df2[exog_vars],
+               endog=df2[endog_vars],
+               instruments=df2[instrument_vars])
+
+# fitting the model
+results = model.fit(cov_type='unadjusted')
+
+# print the result summary
+print(results)
+
+# predicting y for df1
+for i in range(1, u_order+1):
+    df1['u_lag'+str(i)] = df1['u'].shift(i)
+df1 = df1.dropna()
+
+predictions = results.predict(exog=df1[exog_vars], endog=df1[endog_vars])

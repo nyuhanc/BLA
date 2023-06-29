@@ -2,6 +2,18 @@ import numpy as np
 import scipy.signal
 import matplotlib.pyplot as plt
 
+theta = np.ones(10)
+y_seq = np.ones(5)
+u_seq = y_seq * 2
+print(theta @ np.concatenate((y_seq, u_seq)))
+
+
+
+
+
+
+
+
 # suppose `a` and `b` are your numpy arrays
 a = np.random.random(1000) - 0.5
 b = np.random.random(1000) - 0.5
